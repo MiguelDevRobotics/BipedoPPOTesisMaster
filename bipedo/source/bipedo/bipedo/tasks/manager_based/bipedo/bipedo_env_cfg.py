@@ -35,14 +35,14 @@ class BipedoRewards(RewardsCfg):
     
     feet_air_time_positive_biped = RewTerm(
             func=mdp.feet_air_time_positive_biped,
-            weight=0.75,
+            weight=0.25,
             params={
                 "sensor_cfg": SceneEntityCfg(
                     "contact_forces",
                     body_names=["link_6", "link_12"]
                 ),
                 "command_name": "base_velocity",
-                "threshold": 0.75,
+                "threshold": 0.4,
             },
         )
 
@@ -59,9 +59,9 @@ class BipedoRewards(RewardsCfg):
     
     feet_silde = RewTerm(
         func = mdp.feet_slide,
-        weight = -0.1,
+        weight = -0.25,
         params={
-            "sensor_cfg": SceneEntityCfg("contact_forces"),
+            "sensor_cfg": SceneEntityCfg("contact_forces", body_names=["link_6", "link_12"]),
             "asset_cfg": SceneEntityCfg("robot")
             }
     )
