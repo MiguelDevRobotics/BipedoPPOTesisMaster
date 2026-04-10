@@ -6,6 +6,7 @@ import isaaclab_tasks.manager_based.locomotion.velocity.mdp as mdp
 from isaaclab_tasks.manager_based.locomotion.velocity.velocity_env_cfg import (
     LocomotionVelocityRoughEnvCfg,
     RewardsCfg,
+    ActionsCfg,
 )
 
 from isaaclab_assets.robots.bipedo_mike import BIPED_CFG   # tu articulation cfg
@@ -28,12 +29,12 @@ class BipedoRewards(RewardsCfg):
 
     track_ang_vel_z_exp = RewTerm(
         func=mdp.track_ang_vel_z_world_exp,
-        weight=0.5,
+        weight=1.0,
         params={"command_name": "base_velocity", "std": 0.5},
     )
     
     feet_air_time_positive_biped = RewTerm(
-            func=mdp.feet_air_time,
+            func=mdp.feet_air_time_positive_biped,
             weight=0.75,
             params={
                 "sensor_cfg": SceneEntityCfg(
@@ -41,13 +42,13 @@ class BipedoRewards(RewardsCfg):
                     body_names=["link_6", "link_12"]
                 ),
                 "command_name": "base_velocity",
-                "threshold": 0.4,
+                "threshold": 0.75,
             },
         )
 
     stand_still_joint_deviation = RewTerm(
             func=mdp.stand_still_joint_deviation_l1,
-            weight=-0.1,
+            weight=-2.0,
             params={
                 "command_name": "base_velocity",
                 "command_threshold": 0.1,
@@ -55,11 +56,31 @@ class BipedoRewards(RewardsCfg):
             },
         
         )
+    
+    feet_silde = RewTerm(
+        func = mdp.feet_slide,
+        weight = -0.1,
+        params={
+            "sensor_cfg": SceneEntityCfg("contact_forces"),
+            "asset_cfg": SceneEntityCfg("robot")
+            }
+    )
       
     feet_air_time = None
     # menos penalización al inicio
     #dof_torques_l2 = RewTerm(func=mdp.joint_torques_l2, weight=-1e-5)
     #action_rate_l2 = RewTerm(func=mdp.action_rate_l2, weight=-0.005)
+
+
+# ------------------------
+# Accion de velocidad para el vipedo
+# ------------------------
+@configclass
+class BipedoActionsCfg(ActionsCfg):
+    joint_vel = mdp.JointPositionActionCfg(asset_name="robot", 
+                                           joint_names=[".*"], 
+                                           scale=0.5, use_default_offset=True
+                                           )
 
 
 # ------------------------
