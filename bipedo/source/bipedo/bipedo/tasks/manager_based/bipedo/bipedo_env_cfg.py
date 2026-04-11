@@ -85,7 +85,7 @@ class BipedoRewards(RewardsCfg):
     
     feet_air_time_positive_biped = RewTerm(
             func=mdp.feet_air_time,
-            weight=0.25,
+            weight=0.75,
             params={
                 "sensor_cfg": SceneEntityCfg(
                     "contact_forces",
@@ -96,7 +96,7 @@ class BipedoRewards(RewardsCfg):
             },
         )
 
-    '''stand_still_joint_deviation = RewTerm(
+    stand_still_joint_deviation = RewTerm(
             func=mdp.stand_still_joint_deviation_l1,
             weight=-0.1,
             params={
@@ -105,7 +105,7 @@ class BipedoRewards(RewardsCfg):
                 "asset_cfg": SceneEntityCfg("robot"),
             },
         
-        )'''
+        )
     
     feet_silde = RewTerm(
         func = mdp.feet_slide,
@@ -218,8 +218,8 @@ class BipedoFlatEnvCfg(LocomotionVelocityRoughEnvCfg):
         self.rewards.action_rate_l2.weight = -0.005
         self.rewards.dof_acc_l2.weight = -1.25e-7
 
-        self.rewards.flat_orientation_l2 = None
-        self.rewards.dof_torques_l2=None
+        #self.rewards.flat_orientation_l2 = None
+        #self.rewards.dof_torques_l2=None
         self.rewards.dof_pos_limits=None
 
 
