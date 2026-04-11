@@ -116,14 +116,14 @@ class BipedoRewards(RewardsCfg):
             }
     )
 
-    '''zmp = RewTerm(
+    zmp = RewTerm(
         func=com_zmp_reward,
-        weight = 0,#-1e-5,
+        weight = -1e-5,
         params={
             "sensor_cfg": SceneEntityCfg("zmp_contact_sensor", body_names=["link_6", "link_12"]),
             "asset_cfg": SceneEntityCfg("robot")
             }
-    )'''
+    )
       
     feet_air_time = None
     # menos penalización al inicio
@@ -171,7 +171,7 @@ class BipedoFlatEnvCfg(LocomotionVelocityRoughEnvCfg):
         # desactivar curriculum
         self.curriculum.terrain_levels = None
 
-        '''nuevo_sensor_cfg = ContactSensorCfg(
+        nuevo_sensor_cfg = ContactSensorCfg(
             prim_path="{ENV_REGEX_NS}/Robot/(link_6|link_12)",
             update_period=0.0,
             track_contact_points=True,
@@ -179,7 +179,7 @@ class BipedoFlatEnvCfg(LocomotionVelocityRoughEnvCfg):
             history_length=3 # Opcional
         )
 
-        self.scene.zmp_contact_sensor = nuevo_sensor_cfg'''
+        self.scene.zmp_contact_sensor = nuevo_sensor_cfg
         
         # ------------------------
         # Randomización OFF
