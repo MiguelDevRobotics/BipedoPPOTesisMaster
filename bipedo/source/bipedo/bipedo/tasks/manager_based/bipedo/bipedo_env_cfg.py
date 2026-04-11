@@ -11,7 +11,7 @@ from isaaclab_tasks.manager_based.locomotion.velocity.velocity_env_cfg import (
 
 from isaaclab_assets.robots.bipedo_mike import BIPED_CFG   # tu articulation cfg
 
-'''import torch
+import torch
 from isaaclab.sensors import ContactSensor, ContactSensorCfg
 
 def com_zmp_reward(env, sensor_cfg: SceneEntityCfg, asset_cfg: SceneEntityCfg):
@@ -56,7 +56,7 @@ def com_zmp_reward(env, sensor_cfg: SceneEntityCfg, asset_cfg: SceneEntityCfg):
     # 6. Reward (Quadratic Penalty)
     error = torch.norm(zmp_theoretical - cop_xy, dim=-1)
     
-    return torch.square(error)'''
+    return torch.square(error)
 
 
 
@@ -84,7 +84,7 @@ class BipedoRewards(RewardsCfg):
     )
     
     feet_air_time_positive_biped = RewTerm(
-            func=mdp.feet_air_time,
+            func=mdp.feet_air_time_positive_biped,
             weight=0.75,
             params={
                 "sensor_cfg": SceneEntityCfg(
