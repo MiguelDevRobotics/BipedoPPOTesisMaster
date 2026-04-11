@@ -11,7 +11,7 @@ from isaaclab_tasks.manager_based.locomotion.velocity.velocity_env_cfg import (
 
 from isaaclab_assets.robots.bipedo_mike import BIPED_CFG   # tu articulation cfg
 
-import torch
+'''import torch
 from isaaclab.sensors import ContactSensor, ContactSensorCfg
 
 def com_zmp_reward(env, sensor_cfg: SceneEntityCfg, asset_cfg: SceneEntityCfg):
@@ -56,7 +56,7 @@ def com_zmp_reward(env, sensor_cfg: SceneEntityCfg, asset_cfg: SceneEntityCfg):
     # 6. Reward (Quadratic Penalty)
     error = torch.norm(zmp_theoretical - cop_xy, dim=-1)
     
-    return torch.square(error)
+    return torch.square(error)'''
 
 
 
@@ -85,7 +85,7 @@ class BipedoRewards(RewardsCfg):
     
     feet_air_time_positive_biped = RewTerm(
             func=mdp.feet_air_time,
-            weight=0.75,
+            weight=0.25,
             params={
                 "sensor_cfg": SceneEntityCfg(
                     "contact_forces",
@@ -96,16 +96,16 @@ class BipedoRewards(RewardsCfg):
             },
         )
 
-    stand_still_joint_deviation = RewTerm(
+    '''stand_still_joint_deviation = RewTerm(
             func=mdp.stand_still_joint_deviation_l1,
-            weight=0,#0.2,
+            weight=-0.1,
             params={
                 "command_name": "base_velocity",
-                "command_threshold": 0.1,
+                #"command_threshold": 0.1,
                 "asset_cfg": SceneEntityCfg("robot"),
             },
         
-        )
+        )'''
     
     feet_silde = RewTerm(
         func = mdp.feet_slide,
@@ -214,12 +214,13 @@ class BipedoFlatEnvCfg(LocomotionVelocityRoughEnvCfg):
         # Rewards
         self.rewards.undesired_contacts = None
         self.rewards.flat_orientation_l2.weight = -1.0
-        self.rewards.dof_torques_l2.weight = 0#-2.0e-6
+        self.rewards.dof_torques_l2.weight = -2.0e-6
         self.rewards.action_rate_l2.weight = -0.005
         self.rewards.dof_acc_l2.weight = -1.25e-7
 
         self.rewards.flat_orientation_l2 = None
         self.rewards.dof_torques_l2=None
+        self.rewards.dof_pos_limits=None
 
 
         # activar flechas
