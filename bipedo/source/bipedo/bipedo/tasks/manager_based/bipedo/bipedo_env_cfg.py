@@ -85,7 +85,7 @@ class BipedoRewards(RewardsCfg):
     
     feet_air_time_positive_biped = RewTerm(
             func=mdp.feet_air_time,
-            weight=1.0,
+            weight=0.75,
             params={
                 "sensor_cfg": SceneEntityCfg(
                     "contact_forces",
