@@ -83,7 +83,7 @@ def get_observation(scene: InteractiveScene, last_action: torch.Tensor):
 
 def run_simulator(sim: SimulationContext, scene: InteractiveScene):
     # load the trained jit policy
-    policy_path = os.path.abspath("/home/mike/Documents/politicas_bipedo/policy.pt")
+    policy_path = os.path.abspath("/path/to/policy.pt")
     file_content = omni.client.read_file(policy_path)[2]
     file = io.BytesIO(memoryview(file_content).tobytes())
     policy = torch.jit.load(file, map_location=args_cli.device)
