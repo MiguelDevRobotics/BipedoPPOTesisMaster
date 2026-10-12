@@ -5,7 +5,7 @@
 [![Isaac Sim](https://img.shields.io/badge/Isaac%20Sim-5.1.0-silver.svg)](https://docs.omniverse.nvidia.com/isaacsim/latest/overview.html)
 [![Isaac Lab](https://img.shields.io/badge/Isaac%20Lab-2.3.2-blue.svg)](https://isaac-sim.github.io/IsaacLab/)
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
-[![License](https://img.shields.io/badge/License-Refer%20to%20Repo-green.svg)](LICENSE)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-green.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 
 *A reinforcement learning framework for bipedal robot locomotion leveraging massive parallel simulation in NVIDIA Isaac Sim and Isaac Lab.*
 
