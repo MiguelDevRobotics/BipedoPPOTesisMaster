@@ -9,57 +9,33 @@ from isaaclab_tasks.manager_based.locomotion.velocity.velocity_env_cfg import (
     ActionsCfg,
 )
 
-from isaaclab_assets.robots.bipedo_mike import BIPED_CFG   # tu articulation cfg
+from isaaclab_assets.robots.bipedo_mike import BIPED_CFG   
+from isaaclab.terrains.terrain_generator_cfg import TerrainGeneratorCfg
+import isaaclab.terrains as terrain_gen
+
 
 import torch
 from isaaclab.sensors import ContactSensor, ContactSensorCfg
-
-def com_zmp_reward(env, sensor_cfg: SceneEntityCfg, asset_cfg: SceneEntityCfg):
-    # 1. References
-    contact_sensor: ContactSensor = env.scene.sensors[sensor_cfg.name]
-    asset = env.scene[asset_cfg.name]
-    
-    # 2. CoM Acceleration (Estimated)
-    dt = env.step_dt 
-    current_com_vel = asset.data.root_com_vel_w[:, :3]
-
-    if not hasattr(env, "prev_com_vel"):
-        # Ensure it's on the same device (GPU/CPU)
-        env.prev_com_vel = current_com_vel.clone()
-
-    com_acc = (current_com_vel - env.prev_com_vel) / dt
-    env.prev_com_vel[:] = current_com_vel
-
-    # 3. CoM Data
-    com_pos = asset.data.root_com_pos_w
-    com_xy = com_pos[:, :2]
-    z_com = com_pos[:, 2:3] 
-    g = 9.81
-
-    # 4. Center of Pressure (CoP) Calculation
-    raw_contact_pos = contact_sensor.data.contact_pos_w[:, sensor_cfg.body_ids]
-    
-    # Average points per link and handle NaNs (when feet are in the air)
-    contact_pos_per_link = torch.nanmean(raw_contact_pos, dim=2) 
-    contact_pos_per_link = torch.nan_to_num(contact_pos_per_link, nan=0.0)
-
-    # Net forces per link (Z-component)
-    fz = contact_sensor.data.net_forces_w[:, sensor_cfg.body_ids, 2].clamp(min=0.0)
-    weights = fz + 1e-6 
-
-    # CoP result
-    cop_xy = torch.sum(contact_pos_per_link[:, :, :2] * weights.unsqueeze(-1), dim=1) / torch.sum(weights, dim=1, keepdim=True)
-
-    # 5. ZMP Equation (LIPM)
-    zmp_theoretical = com_xy - (z_com / g) * com_acc[:, :2]
-
-    # 6. Reward (Quadratic Penalty)
-    error = torch.norm(zmp_theoretical - cop_xy, dim=-1)
-    
-    return torch.square(error)
+from isaaclab.managers import EventTermCfg as EventTerm
+from isaaclab.envs import ManagerBasedEnv
+from isaaclab.assets import Articulation
 
 
-
+ROUGH_TERRAIN_CFG = TerrainGeneratorCfg(
+    size=(4.0, 4.0),
+    border_width=20.0,
+    num_rows=10,
+    num_cols = 20,
+    horizontal_scale = 0.1,
+    vertical_scale = 0.005,
+    slope_threshold=0.75,
+    use_cache=True,
+    sub_terrains={
+        "random_rough": terrain_gen.HfRandomUniformTerrainCfg(
+            proportion=1.0, noise_range=(0.005, 0.01), noise_step=0.005, border_width=0.25
+        )
+    } 
+)
 
 
 # ------------------------
@@ -67,10 +43,12 @@ def com_zmp_reward(env, sensor_cfg: SceneEntityCfg, asset_cfg: SceneEntityCfg):
 # ------------------------
 
 @configclass
-class BipedoRewards(RewardsCfg):
+class BipedoRewards:#(RewardsCfg):
 
     termination_penalty = RewTerm(func=mdp.is_terminated, weight=-200.0)
-
+    
+    #lin_vel_z_l2 = None
+    
     track_lin_vel_xy_exp = RewTerm(
         func=mdp.track_lin_vel_xy_yaw_frame_exp,
         weight=2.0,
@@ -79,60 +57,40 @@ class BipedoRewards(RewardsCfg):
 
     track_ang_vel_z_exp = RewTerm(
         func=mdp.track_ang_vel_z_world_exp,
-        weight=0.5,
+        weight=1.0,
         params={"command_name": "base_velocity", "std": 0.5},
     )
     
     feet_air_time_positive_biped = RewTerm(
             func=mdp.feet_air_time_positive_biped,
-            weight=0.75,
+            weight=2.5,
             params={
                 "sensor_cfg": SceneEntityCfg(
                     "contact_forces",
                     body_names=["link_6", "link_12"]
                 ),
                 "command_name": "base_velocity",
-                "threshold": 0.4,
+                "threshold": 0.6,
             },
         )
-
+    
     stand_still_joint_deviation = RewTerm(
             func=mdp.stand_still_joint_deviation_l1,
             weight=-0.1,
             params={
                 "command_name": "base_velocity",
-                #"command_threshold": 0.1,
+                "command_threshold": 0.1,
                 "asset_cfg": SceneEntityCfg("robot"),
             },
         
         )
     
-    feet_silde = RewTerm(
-        func = mdp.feet_slide,
-        weight = -0.25,
-        params={
-            "sensor_cfg": SceneEntityCfg("contact_forces", body_names=["link_6", "link_12"]),
-            "asset_cfg": SceneEntityCfg("robot", body_names=["link_6", "link_12"])
-            }
-    )
-
-    zmp = RewTerm(
-        func=com_zmp_reward,
-        weight = -1e-5,
-        params={
-            "sensor_cfg": SceneEntityCfg("zmp_contact_sensor", body_names=["link_6", "link_12"]),
-            "asset_cfg": SceneEntityCfg("robot")
-            }
-    )
       
     feet_air_time = None
-    # menos penalización al inicio
-    #dof_torques_l2 = RewTerm(func=mdp.joint_torques_l2, weight=-1e-5)
-    #action_rate_l2 = RewTerm(func=mdp.action_rate_l2, weight=-0.005)
 
 
 # ------------------------
-# Accion de velocidad para el vipedo
+# Accion de velocidad para el bipedo
 # ------------------------
 @configclass
 class BipedoActionsCfg(ActionsCfg):
@@ -205,22 +163,14 @@ class BipedoFlatEnvCfg(LocomotionVelocityRoughEnvCfg):
         }
 
         # ------------------------
-        # Comandos simples (solo forward)
+        # Comandos simples
         # ------------------------
-        self.commands.base_velocity.ranges.lin_vel_x = (0.0, 1.0)
-        self.commands.base_velocity.ranges.lin_vel_y = (0.0, 0.0)
+        self.commands.base_velocity.ranges.lin_vel_x = (-1.0, 1.0)
+        self.commands.base_velocity.ranges.lin_vel_y = (-1.0, 1.0)
         self.commands.base_velocity.ranges.ang_vel_z = (0.0, 0.0)
-        
-        # Rewards
-        self.rewards.undesired_contacts = None
-        self.rewards.flat_orientation_l2.weight = -1.0
-        self.rewards.dof_torques_l2.weight = -2.0e-6
-        self.rewards.action_rate_l2.weight = -0.005
-        self.rewards.dof_acc_l2.weight = -1.25e-7
+        self.commands.base_velocity.ranges.heading = (0.0, 0.0)
 
-        #self.rewards.flat_orientation_l2 = None
-        #self.rewards.dof_torques_l2=None
-        self.rewards.dof_pos_limits=None
+
 
 
         # activar flechas
@@ -231,11 +181,10 @@ class BipedoFlatEnvCfg(LocomotionVelocityRoughEnvCfg):
         # ------------------------
         self.terminations.base_contact.params["sensor_cfg"].body_names = [".*base_link"]
 
+
         # ------------------------
         # Simplificar escena
         # ------------------------
         self.scene.num_envs = 1024
         self.scene.env_spacing = 2.5
 
-        # episodios más cortos al inicio
-        #self.episode_length_s = 15.0

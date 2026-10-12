@@ -14,7 +14,7 @@ from . import agents
 
 gym.register(
     id="Template-Bipedo-v0",
-    entry_point="isaaclab.envs:ManagerBasedRLEnv",
+    entry_point="bipedo.tasks.manager_based.bipedo.bipedo_env:BipedoEnv",
     disable_env_checker=True,
     kwargs={
         "env_cfg_entry_point": f"{__name__}.bipedo_env_cfg:BipedoFlatEnvCfg",
@@ -22,5 +22,6 @@ gym.register(
         "rsl_rl_cfg_entry_point": f"{agents.__name__}.rsl_rl_ppo_cfg:PPORunnerCfg",
         "skrl_cfg_entry_point": f"{agents.__name__}:skrl_ppo_cfg.yaml",
         "sb3_cfg_entry_point": f"{agents.__name__}:sb3_ppo_cfg.yaml",
+        "skrl_sac_cfg_entry_point": f"{agents.__name__}:skrl_sac_cfg.yaml"
     },
 )

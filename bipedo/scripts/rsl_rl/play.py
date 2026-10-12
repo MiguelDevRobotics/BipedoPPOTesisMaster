@@ -136,6 +136,13 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
 
     # wrap around environment for rsl-rl
     env = RslRlVecEnvWrapper(env, clip_actions=agent_cfg.clip_actions)
+    
+    robot = env.unwrapped.scene["robot"]
+
+    print("\n[INFO] Joint order used by policy:")
+    for i, name in enumerate(robot.data.joint_names):
+        print(i, name)
+        
 
     print(f"[INFO]: Loading model checkpoint from: {resume_path}")
     # load previously trained model
@@ -176,6 +183,7 @@ def main(env_cfg: ManagerBasedRLEnvCfg | DirectRLEnvCfg | DirectMARLEnvCfg, agen
 
     # reset environment
     obs = env.get_observations()
+    print(obs["policy"])
     timestep = 0
     # simulate environment
     while simulation_app.is_running():
